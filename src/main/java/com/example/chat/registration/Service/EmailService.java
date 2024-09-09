@@ -12,6 +12,7 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class EmailService {
 
+
     private final JavaMailSender mailSender;
 
     public EmailService(JavaMailSender mailSender) {

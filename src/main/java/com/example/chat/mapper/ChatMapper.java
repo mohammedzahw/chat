@@ -1,22 +1,50 @@
 package com.example.chat.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.example.chat.chat.dto.ChatDto;
 import com.example.chat.chat.model.Chat;
 
-@Mapper
-public interface ChatMapper {
-    ChatMapper INSTANCE = Mappers.getMapper(ChatMapper.class);
+@Component
+public class ChatMapper {
+    private final MessageChatMapper messageChatMapper;
 
-    public ChatDto toDto(Chat chat);
+    public ChatMapper(MessageChatMapper messageChatMapper) {
+        this.messageChatMapper = messageChatMapper;
+    }
 
-    // public Chat toEntity(ChatDto chatDto);
+    /********************************************************************************* */
 
-    public List<ChatDto> toDtoList(List<Chat> chats);
+    public ChatDto toDto(Chat chat) {
+        if (chat == null) {
+            return null;
+        }
 
-    // public List<Chat> toEntityList(List<ChatDto> chatDtos);
+        ChatDto chatDto = new ChatDto();
+
+        chatDto.setCreatedDate(chat.getCreatedDate());
+        chatDto.setId(chat.getId());
+        chatDto.setMessages(messageChatMapper.toDtoList(chat.getMessages()));
+
+        return chatDto;
+    }
+
+    /********************************************************************************* */
+
+    public List<ChatDto> toDtoList(List<Chat> chats) {
+        if (chats == null) {
+            return null;
+        }
+
+        List<ChatDto> list = new ArrayList<ChatDto>(chats.size());
+        for (Chat chat : chats) {
+            list.add(toDto(chat));
+        }
+
+        return list;
+    }
+    /********************************************************************************* */
 }

@@ -1,28 +1,120 @@
 package com.example.chat.mapper;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.example.chat.registration.dto.LocalUserDto;
 import com.example.chat.registration.dto.LocalUserProfileDto;
 import com.example.chat.registration.dto.SignUpRequestDto;
 import com.example.chat.registration.model.LocalUser;
 
-@Mapper
-public interface LocalUserMapper {
-    LocalUserMapper INSTANCE = Mappers.getMapper(LocalUserMapper.class);
+@Component
 
-    LocalUser toEntity(LocalUserDto userDto);
+public class LocalUserMapper {
 
-    LocalUser toEntity(SignUpRequestDto signUpRequestDto);
+    public LocalUser toEntity(LocalUserDto userDto) {
+        if (userDto == null) {
+            return null;
+        }
 
-    LocalUserDto toDto(LocalUser user);
+        LocalUser.LocalUserBuilder localUser = LocalUser.builder();
 
-    List<LocalUserDto> toDtoList(List<LocalUser> customers);
+        localUser.about(userDto.getAbout());
+        localUser.active(userDto.getActive());
+        localUser.id(userDto.getId());
+        localUser.imageUrl(userDto.getImageUrl());
+        localUser.name(userDto.getName());
 
-    List<LocalUser> toEntityList(List<LocalUserDto> customerDtos);
+        return localUser.build();
+    }
 
-    LocalUserProfileDto toUserProfileDto(LocalUser user);
+    /********************************************************************************************* */
+
+    public LocalUser toEntity(SignUpRequestDto signUpRequestDto) {
+        if (signUpRequestDto == null) {
+            return null;
+        }
+
+        LocalUser.LocalUserBuilder localUser = LocalUser.builder();
+
+        localUser.about(signUpRequestDto.getAbout());
+        localUser.email(signUpRequestDto.getEmail());
+        localUser.name(signUpRequestDto.getName());
+        localUser.password(signUpRequestDto.getPassword());
+        localUser.phone(signUpRequestDto.getPhone());
+
+        return localUser.build();
+    }
+
+    /********************************************************************************************* */
+
+    public LocalUserDto toDto(LocalUser user) {
+        if (user == null) {
+            return null;
+        }
+
+        LocalUserDto localUserDto = new LocalUserDto();
+
+        localUserDto.setAbout(user.getAbout());
+        localUserDto.setActive(user.getActive());
+        localUserDto.setId(user.getId());
+        localUserDto.setImageUrl(user.getImageUrl());
+        localUserDto.setName(user.getName());
+
+        return localUserDto;
+    }
+
+    /********************************************************************************************* */
+
+    public List<LocalUserDto> toDtoList(List<LocalUser> customers) {
+        if (customers == null) {
+            return null;
+        }
+
+        List<LocalUserDto> list = new ArrayList<LocalUserDto>(customers.size());
+        for (LocalUser localUser : customers) {
+            list.add(toDto(localUser));
+        }
+
+        return list;
+    }
+
+    /********************************************************************************************* */
+
+    public List<LocalUser> toEntityList(List<LocalUserDto> customerDtos) {
+        if (customerDtos == null) {
+            return null;
+        }
+        /********************************************************************************************* */
+
+        List<LocalUser> list = new ArrayList<LocalUser>(customerDtos.size());
+        for (LocalUserDto localUserDto : customerDtos) {
+            list.add(toEntity(localUserDto));
+        }
+
+        return list;
+    }
+
+    /********************************************************************************************* */
+
+    public LocalUserProfileDto toUserProfileDto(LocalUser user) {
+        if (user == null) {
+            return null;
+        }
+
+        LocalUserProfileDto localUserProfileDto = new LocalUserProfileDto();
+
+        localUserProfileDto.setAbout(user.getAbout());
+        localUserProfileDto.setActive(user.getActive());
+        localUserProfileDto.setEmail(user.getEmail());
+        localUserProfileDto.setImageUrl(user.getImageUrl());
+        localUserProfileDto.setName(user.getName());
+        localUserProfileDto.setPhone(user.getPhone());
+
+        return localUserProfileDto;
+    }
+    /********************************************************************************************* */
+
 }

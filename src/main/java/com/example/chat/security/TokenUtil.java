@@ -73,6 +73,22 @@ public class TokenUtil {
     }
 
     /***************************************************************************************/
+    public Integer getUserIdFromToken(String token) {
+        if (token == null)
+            return null;
+
+
+        try {
+            Claims claims = getClaims(token);
+            Integer userId = (Integer) claims.get("userId");
+
+            return userId;
+        } catch (Exception ex) {
+            log.error("Error getting user ID from token: {}", ex.getMessage());
+            return null;
+        }
+    }
+    /***************************************************************************************/
     public Integer getUserId() {
         String token = getTokenFromRequest();
         if (token == null)
@@ -89,17 +105,6 @@ public class TokenUtil {
         }
     }
 
-    /***************************************************************************************/
-    // public Integer getUserId() {
-
-    // if (request.getHeader("Authorization") == null)
-    // return null;
-    // String token = request.getHeader("Authorization").substring("Bearer
-    // ".length());
-    // Claims claims = getClaims(token);
-
-    // return (Integer) claims.get("userId");
-    // }
     /***************************************************************************************/
 
     private Date generateExpirationDate(Integer TOKEN_VALIDITY) {

@@ -1,17 +1,37 @@
 package com.example.chat.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import com.example.chat.chat.dto.GroupDto;
 import com.example.chat.chat.model.Group;
 
-@Mapper
-public interface GroupMapper {
+import lombok.RequiredArgsConstructor;
 
+@Component
+@RequiredArgsConstructor
+public class GroupMapper {
+    private final MessageGroupMapper messageGroupMapper;
+    private final LocalUserMapper localUserMapper;
 
-     GroupMapper INSTANCE = Mappers.getMapper(GroupMapper.class);
+    public GroupDto toDto(Group group) {
+        if (group == null) {
+            return null;
+        }
 
-    public GroupDto toDto(Group group);
+        GroupDto groupDto = new GroupDto();
+
+        groupDto.setCreatedDate(group.getCreatedDate());
+        groupDto.setDescription(group.getDescription());
+        groupDto.setId(group.getId());
+        groupDto.setImageUrl(group.getImageUrl());
+        groupDto.setLastUpdated(group.getLastUpdated());
+        groupDto.setMessages(messageGroupMapper.toDtoList(group.getMessages()));
+        groupDto.setName(group.getName());
+        groupDto.setOwner(localUserMapper.toDto(group.getOwner()));
+        groupDto.setPrivacy(group.getPrivacy());
+
+        return groupDto;
+    }
+    /********************************************************************************************* */
 
 }

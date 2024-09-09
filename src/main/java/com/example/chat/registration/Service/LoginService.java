@@ -47,7 +47,7 @@ public class LoginService {
             throw new CustomException("Wrong Password!", HttpStatus.BAD_REQUEST);
         }
         if (!user.getActive()) {
-            String token = tokenUtil.generateToken(loginRequest.getEmail(), 1000, 1000);
+            String token = tokenUtil.generateToken(loginRequest.getEmail(), user.getId(), 1000);
             signUpService.sendRegistrationVerificationCode(loginRequest.getEmail(),
                     request,
                     token);

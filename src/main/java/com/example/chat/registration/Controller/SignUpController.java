@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.chat.registration.Service.LocalUserService;
 import com.example.chat.registration.Service.SignUpService;
 import com.example.chat.registration.dto.SignUpRequestDto;
 import com.example.chat.registration.model.LocalUser;
@@ -37,7 +36,7 @@ public class SignUpController {
 
     private final TokenUtil tokenUtil;
 
-    public SignUpController(SignUpService signUpService, LocalUserRepository localUserRepository,  TokenUtil tokenUtil) {
+    public SignUpController(SignUpService signUpService, LocalUserRepository localUserRepository, TokenUtil tokenUtil) {
         this.signUpService = signUpService;
         this.localUserRepository = localUserRepository;
         this.tokenUtil = tokenUtil;
@@ -60,9 +59,9 @@ public class SignUpController {
             return new ResponseEntity<>("Email already exists , Please login", HttpStatus.BAD_REQUEST);
         }
 
-        signUpService.saveUser(signUpRequest);
+        LocalUser = signUpService.saveUser(signUpRequest);
 
-        String token = tokenUtil.generateToken(signUpRequest.getEmail(), 1000, 1000);
+        String token = tokenUtil.generateToken(signUpRequest.getEmail(), LocalUser.getId(), 1000);
 
         signUpService.sendRegistrationVerificationCode(signUpRequest.getEmail(), request,
                 token);
@@ -77,7 +76,7 @@ public class SignUpController {
             HttpServletResponse response)
             throws SQLException, IOException {
 
-         signUpService.verifyEmail(verficationToken, response);
+        signUpService.verifyEmail(verficationToken);
 
         return new ResponseEntity<>("Account is verified, you can login now", HttpStatus.OK);
     }

@@ -14,17 +14,16 @@ import com.example.chat.registration.model.LocalUser;
 import com.example.chat.registration.repository.LocalUserRepository;
 import com.example.chat.security.TokenUtil;
 
-@Service
-public class LocalUserService {
+import lombok.RequiredArgsConstructor;
 
+@Service
+@RequiredArgsConstructor
+public class LocalUserService {
+    private final LocalUserMapper localUserMapper;
     private final LocalUserRepository localUserRepository;
 
     private final TokenUtil tokenUtil;
 
-    public LocalUserService(LocalUserRepository localUserRepository, TokenUtil tokenUtil) {
-        this.localUserRepository = localUserRepository;
-        this.tokenUtil = tokenUtil;
-    }
 
     /*******************************************************************************************/
 
@@ -32,8 +31,14 @@ public class LocalUserService {
 
         LocalUser user = localUserRepository.findById(tokenUtil.getUserId()).orElseThrow(
                 () -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-        return LocalUserMapper.INSTANCE.toDto(user);
+        return localUserMapper.toDto(user);
 
+    }
+
+    /************************************************************************************************** */
+    public Integer getUserId() {
+
+        return tokenUtil.getUserId();
     }
 
     /*******************************************************************************************/
@@ -68,7 +73,7 @@ public class LocalUserService {
     public LocalUserProfileDto getUserProfile() {
         LocalUser user = localUserRepository.findById(tokenUtil.getUserId()).orElseThrow(
                 () -> new CustomException("User not found", HttpStatus.NOT_FOUND));
-        return LocalUserMapper.INSTANCE.toUserProfileDto(user);
+        return localUserMapper.toUserProfileDto(user);
     }
 
     /*******************************************************************************************/
@@ -89,16 +94,16 @@ public class LocalUserService {
         user.setName(updateUserRequest.getName());
         user.setEmail(updateUserRequest.getEmail());
         localUserRepository.save(user);
-        return LocalUserMapper.INSTANCE.toDto(user);
+        return localUserMapper.toDto(user);
     }
-
-    /*******************************************************************************************/
 
     /*******************************************************************************************/
 
     void saveUser(LocalUser user) {
         localUserRepository.save(user);
     }
+
+    /*******************************************************************************************/
 
     public List<String> getQueuesByUserId() {
 
@@ -114,7 +119,9 @@ public class LocalUserService {
         localUserRepository.addQueue(userId, queueID);
     }
 
+    /*******************************************************************************************/
     public void addChat(Integer userId, Integer id) {
         localUserRepository.addChat(userId, id);
     }
+
 }

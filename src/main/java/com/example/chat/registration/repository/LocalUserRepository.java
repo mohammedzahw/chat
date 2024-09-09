@@ -1,6 +1,5 @@
 package com.example.chat.registration.repository;
 
-import java.nio.channels.Channel;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import com.example.chat.chat.model.Chat;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.registration.model.LocalUser;
 
@@ -33,13 +31,23 @@ public interface LocalUserRepository extends JpaRepository<LocalUser, Integer> {
     @Query("SELECT u.listendQueues FROM LocalUser u WHERE u.id = :userId")
     List<Queue> getQueuesByUserId(Integer userId);
 
-    @Query("SELECT u.chats FROM LocalUser u WHERE u.id = :userId")
-    List<Chat> getChatsByUserId(Integer userId);
+    // @Query("SELECT u.chats FROM LocalUser u WHERE u.id = :userId")
+    // List<Chat> getChatsByUserId(Integer userId);
 
-    @Query("SELECT u.groups FROM LocalUser u WHERE u.id = :userId")
-    List<Group> getGroupsByUserId(Integer userId);
+    // @Query("SELECT u.groups FROM LocalUser u WHERE u.id = :userId")
+    // List<Group> getGroupsByUserId(Integer userId);
 
-    @Query("SELECT u.channels FROM LocalUser u WHERE u.id = :userId")
-    List<Channel> getChannelsByUserId(Integer userId);
+    // @Query("SELECT u.ownedChannels FROM LocalUser u WHERE u.id = :userId")
+    // List<Channel> getOwnedChannelsByUserId(Integer userId);
+
+    // @Query("SELECT u.followedChannels FROM LocalUser u WHERE u.id = :userId")
+    // List<Channel>getFollowedChannelsByUserId(Integer userId);
+
+    // @Query("SELECT u.joinedGroups FROM LocalUser u WHERE u.id = :userId")
+    // List<Group> getJoinedGroupsByUserId(Integer userId);
+
+    // @Query("SELECT u.ownedGroups FROM LocalUser u WHERE u.id = :userId")
+    // List<Group> getOwnedGroupsByUserId(Integer userId);
+
 
 }

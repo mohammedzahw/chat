@@ -17,12 +17,11 @@ import com.example.chat.security.TokenUtil;
 
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 
 public class SignUpService {
-
+    private LocalUserMapper localUserMapper;
     private final EmailService emailService;
 
     private final LocalUserService localUserService;
@@ -43,11 +42,11 @@ public class SignUpService {
     }
     /******************************************************************************************************************/
 
-    public void saveUser(SignUpRequestDto request) throws MessagingException, IOException, SQLException {
+    public LocalUser saveUser(SignUpRequestDto request) throws MessagingException, IOException, SQLException {
         try {
 
             request.setPassword(passwordEncoder.encode(request.getPassword()));
-            LocalUser user = LocalUserMapper.INSTANCE.toEntity(request);
+            LocalUser user = localUserMapper.toEntity(request);
             user.setActive(false);
 
             Role role = roleService.getByRole("ROLE_USER");
@@ -60,6 +59,8 @@ public class SignUpService {
 
             localUserService.saveUser(user);
 
+            return user;
+
         } catch (Exception e) {
 
             throw new CustomException(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -69,13 +70,13 @@ public class SignUpService {
 
     // /******************************************************************************************************************/
 
-    public void verifyEmail(String token, HttpServletResponse response) throws SQLException, IOException {
+    public void verifyEmail(String token) throws SQLException, IOException {
 
         if (tokenUtil.isTokenExpired(token)) {
             throw new CustomException("Token is expired", HttpStatus.BAD_REQUEST);
         }
-
-        LocalUser User = localUserService.getLocalUserById(tokenUtil.getUserId());
+        // String email = tokenUtil.getUserIdFromToken(token)
+        LocalUser User = localUserService.getLocalUserById(tokenUtil.getUserIdFromToken(token));
 
         User.setActive(true);
 
