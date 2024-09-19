@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +36,10 @@ public class LocalUser {
     private String phone;
     private String about;
     private Boolean active;
-    private String imageUrl;
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "user")
+    @ToStringExclude
+    @JsonIgnore
+    private ImageUser imageUser;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "queue_id"))

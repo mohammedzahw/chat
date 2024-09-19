@@ -15,20 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.chat.chat.service.ChatService;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/chat")
 @Slf4j
-@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
-
- 
 
     /******************************************************************************************************* */
     @PostMapping("/create-chat")
@@ -57,7 +53,7 @@ public class ChatController {
     public ResponseEntity<?> deleteChat(@PathVariable("chatId") Integer chatId) throws IOException, TimeoutException {
         chatService.deleteChat(chatId);
         return new ResponseEntity<>("Chat deleted", HttpStatus.OK);
-    }   
+    }
 
     /********************************************************************************************** */
 }

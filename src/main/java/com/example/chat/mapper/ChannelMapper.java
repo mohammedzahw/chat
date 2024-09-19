@@ -35,10 +35,13 @@ public class ChannelMapper {
 
         channelDto.setDescription(channel.getDescription());
         channelDto.setId(channel.getId());
-        channelDto.setImageUrl(channel.getImageUrl());
         channelDto.setMessages(messageChannelMapper.toDtoList(channel.getMessages()));
         channelDto.setName(channel.getName());
         channelDto.setOwner(localUserMapper.toDto(channel.getOwner()));
+
+        if (channel.getImageChannel() != null) {
+            channelDto.setImageUrl(channel.getImageChannel().getImageUrl());
+        }
 
         return channelDto;
     }
@@ -90,10 +93,11 @@ public class ChannelMapper {
         }
         showChannelDto.setId(channel.getId());
         showChannelDto.setName(channel.getName());
-
-        showChannelDto.setImageUrl(channel.getImageUrl());
+        if (channel.getImageChannel() != null)
+            showChannelDto.setImageUrl(channel.getImageChannel().getImageUrl());
 
         return showChannelDto;
+
     }
 
     /*************************************************************************************************************** */

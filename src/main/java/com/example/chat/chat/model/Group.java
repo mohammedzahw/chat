@@ -36,11 +36,16 @@ public class Group {
     private Integer id;
     private String name;
     private String description;
-    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     private GroupPrivacy privacy;
     private LocalDateTime lastUpdated;
     private LocalDateTime createdDate;
+
+    @OneToOne(mappedBy = "group", fetch = FetchType.EAGER)
+    @ToStringExclude
+    @JsonIgnore
+    private ImageGroup imageGroup;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "group_admin", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
@@ -65,12 +70,12 @@ public class Group {
     private List<MessageGroup> messages;
     
     @JoinColumn(name = "queue_id")
-    @OneToOne(fetch = FetchType.EAGER,cascade = {
-        CascadeType.PERSIST,
-        CascadeType.MERGE,
-        CascadeType.DETACH,
-        CascadeType.REFRESH
-})
+    @OneToOne(fetch = FetchType.EAGER, cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE,
+            CascadeType.DETACH,
+            CascadeType.REFRESH
+    })
     @ToStringExclude
     @JsonIgnore
     private Queue queue;
@@ -79,7 +84,6 @@ public class Group {
             Integer id,
             String name,
             String description,
-            String imageUrl,
             GroupPrivacy privacy,
             LocalDateTime lastUpdated
 
@@ -87,7 +91,7 @@ public class Group {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.imageUrl = imageUrl;
+
         this.privacy = privacy;
         this.lastUpdated = lastUpdated;
     }

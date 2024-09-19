@@ -117,8 +117,11 @@ public class ChatService {
             }
             Long unreadCount = messageChatService.getNumberOfUreadMessageByChatId(c.getId());
 
-            ShowChatDto showChatDto = new ShowChatDto(c.getId(), sender.getName(), sender.getImageUrl(),
+            ShowChatDto showChatDto = new ShowChatDto(c.getId(), sender.getName(),
                     unreadCount, messageDto);
+            if (sender.getImageUser() != null) {
+                showChatDto.setImageUrl(sender.getImageUser().getImageUrl());
+            }
             chatDtos.add(showChatDto);
 
         }
@@ -163,7 +166,7 @@ public class ChatService {
     }
 
     /*** ***************************************************************************************/
-@Transactional
+    @Transactional
     public void deleteChat(Integer chatId) throws IOException, TimeoutException {
         LocalUser user = localUserService.getLocalUserByToken();
 

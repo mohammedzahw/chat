@@ -9,14 +9,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.chat.chat.dto.SendMessageDto;
-import com.example.chat.chat.dto.UpdateMessageDto;
 import com.example.chat.chat.model.MessageReaction;
 import com.example.chat.chat.service.MessageGroupService;
 import com.example.chat.mapper.MessageGroupMapper;
@@ -65,15 +63,6 @@ public class MessageGroupController {
             @PathVariable("page") Integer page) {
         return ResponseEntity.ok(messageGroupMapper.toDtoList(
                 messageGroupService.getMessagesByGroupId(groupId, page)));
-    }
-
-    /***************************************************************************************** */
-    //TODO: Update Message
-    @PutMapping("/update-message")
-    public ResponseEntity<?> updateMessage(
-            @RequestBody UpdateMessageDto updateMessage) {
-        messageGroupService.updateMessage(updateMessage);
-        return ResponseEntity.ok("Message updated");
     }
 
     /***************************************************************************************** */

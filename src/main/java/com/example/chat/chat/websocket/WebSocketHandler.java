@@ -1,20 +1,18 @@
 package com.example.chat.chat.websocket;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 @SuppressWarnings("null")
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private static Set<WebSocketSession> sessions = new HashSet<>();
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished( WebSocketSession session) throws Exception {
         sessions.add(session);
     }
 

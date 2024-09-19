@@ -23,12 +23,14 @@ public class GroupMapper {
         groupDto.setCreatedDate(group.getCreatedDate());
         groupDto.setDescription(group.getDescription());
         groupDto.setId(group.getId());
-        groupDto.setImageUrl(group.getImageUrl());
         groupDto.setLastUpdated(group.getLastUpdated());
         groupDto.setMessages(messageGroupMapper.toDtoList(group.getMessages()));
         groupDto.setName(group.getName());
         groupDto.setOwner(localUserMapper.toDto(group.getOwner()));
         groupDto.setPrivacy(group.getPrivacy());
+        if (group.getImageGroup() != null) {
+            groupDto.setImageUrl(group.getImageGroup().getImageUrl());
+        }
 
         return groupDto;
     }

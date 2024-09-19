@@ -24,7 +24,7 @@ public class LocalUserMapper {
         localUser.about(userDto.getAbout());
         localUser.active(userDto.getActive());
         localUser.id(userDto.getId());
-        localUser.imageUrl(userDto.getImageUrl());
+
         localUser.name(userDto.getName());
 
         return localUser.build();
@@ -60,7 +60,8 @@ public class LocalUserMapper {
         localUserDto.setAbout(user.getAbout());
         localUserDto.setActive(user.getActive());
         localUserDto.setId(user.getId());
-        localUserDto.setImageUrl(user.getImageUrl());
+        if (user.getImageUser() != null)
+            localUserDto.setImageUrl(user.getImageUser().getImageUrl());
         localUserDto.setName(user.getName());
 
         return localUserDto;
@@ -109,7 +110,8 @@ public class LocalUserMapper {
         localUserProfileDto.setAbout(user.getAbout());
         localUserProfileDto.setActive(user.getActive());
         localUserProfileDto.setEmail(user.getEmail());
-        localUserProfileDto.setImageUrl(user.getImageUrl());
+        if (user.getImageUser() != null)
+            localUserProfileDto.setImageUrl(user.getImageUser().getImageUrl());
         localUserProfileDto.setName(user.getName());
         localUserProfileDto.setPhone(user.getPhone());
 

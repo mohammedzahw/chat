@@ -1,23 +1,29 @@
 package com.example.chat.chat.service;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.chat.chat.dto.ChannelDto;
 import com.example.chat.chat.dto.CreateChannelRequestDto;
 import com.example.chat.chat.dto.ShowChannelDto;
 import com.example.chat.chat.dto.UpdateChannelRequest;
 import com.example.chat.chat.model.Channel;
+import com.example.chat.chat.model.ImageChannel;
 import com.example.chat.chat.model.MessageChannel;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.chat.repository.ChannelRepository;
+import com.example.chat.chat.repository.ImageChannelRepository;
 import com.example.chat.exception.CustomException;
 import com.example.chat.mapper.ChannelMapper;
 import com.example.chat.registration.Service.LocalUserService;
@@ -31,17 +37,23 @@ public class ChannelService {
 
     private final ChannelMapper channelMapper;
     private final QueueService queueService;
+    private final CloudinaryService cloudinaryService;
 
     private final ChannelRepository channelRepository;
 
     private final LocalUserService localUserService;
-
+    private final ImageChannelRepository imageChannelRepository;
     private final MessageChannelService messageChannelService;
 
     public ChannelService(ChannelMapper channelMapper, QueueService queueService, ChannelRepository channelRepository,
-            LocalUserService localUserService, @Lazy MessageChannelService messageChannelService) {
+            LocalUserService localUserService, @Lazy MessageChannelService messageChannelService,
+            ImageChannelRepository imageChannelRepository,
+            CloudinaryService cloudinaryService) {
+
+        this.cloudinaryService = cloudinaryService;
         this.channelMapper = channelMapper;
         this.queueService = queueService;
+        this.imageChannelRepository = imageChannelRepository;
         this.channelRepository = channelRepository;
         this.localUserService = localUserService;
         this.messageChannelService = messageChannelService;
@@ -80,6 +92,37 @@ public class ChannelService {
         }
 
     }
+
+    /****************************************************************************************** */
+    @SuppressWarnings("rawtypes")
+    public void uploadImage(Integer channelId, MultipartFile image) throws IOException {
+        LocalUser user = localUserService.getLocalUserByToken();
+
+        BufferedImage bi = ImageIO.read(image.getInputStream());
+        if (bi == null) {
+            throw new CustomException("Invalid image file", HttpStatus.BAD_REQUEST);
+        }
+        Channel channel = getChannelById(channelId);
+
+        if (!user.getId().equals(channel.getOwner().getId())) {
+            throw new CustomException("You can't upload image to this group", HttpStatus.BAD_REQUEST);
+        }
+        if (channel.getImageChannel() != null) {
+            cloudinaryService.delete(channel.getImageChannel().getImageId());
+        }
+        Map result = cloudinaryService.upload(image);
+        ImageChannel imageChannel = new ImageChannel();
+
+        imageChannel.setImageId((String) result.get("public_id"));
+        imageChannel.setImageUrl((String) result.get("url"));
+
+        imageChannel.setChannel(channel);
+
+        saveImage(imageChannel);
+
+    }
+
+    /****************************************************************************************** */
 
     /******************************************************************************************************* */
     public ChannelDto getChannelWithMessages(Integer channelId) {
@@ -141,7 +184,7 @@ public class ChannelService {
     public List<ShowChannelDto> getFollowedChannels() {
 
         List<Channel> channels = channelRepository.getFollowedChannelsByUserId(localUserService.getUserId());
-        
+
         return channelMapper.toShowDtoList(channels);
 
     }
@@ -163,13 +206,13 @@ public class ChannelService {
 
     /******************************************************************************************************* */
     public Channel getChannelById(Integer id) {
-        
+
         return channelRepository.findById(id)
-        .orElseThrow(() -> new CustomException("Channel not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new CustomException("Channel not found", HttpStatus.NOT_FOUND));
     }
-    
+
     public Channel updateChannel(UpdateChannelRequest updateChannelRequestDto) {
-        
+
         Channel channel = getChannel(updateChannelRequestDto.getId());
         channel.setName(updateChannelRequestDto.getName());
         channel.setDescription(updateChannelRequestDto.getDescription());
@@ -177,7 +220,13 @@ public class ChannelService {
         channelRepository.save(channel);
         return channel;
     }
-    
+
+    /******************************************************************************************************* */
+    public ImageChannel saveImage(ImageChannel imageChannel) {
+
+        return imageChannelRepository.save(imageChannel);
+    }
+
     /******************************************************************************************************* */
     public void deleteChannel(Integer channelId) throws IOException, TimeoutException {
         LocalUser user = localUserService.getLocalUserByToken();

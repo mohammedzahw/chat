@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.chat.chat.dto.CreateGroupRequestDto;
 import com.example.chat.chat.dto.GroupDto;
@@ -78,6 +81,15 @@ public class GroupController {
             throws IOException, TimeoutException {
         groupService.deleteGroup(groupId);
         return new ResponseEntity<>("Group deleted", HttpStatus.OK);
+    }
+
+    /********************************************************************************************** */
+    @PostMapping("/upload-image")
+    @ResponseBody
+    public ResponseEntity<String> upload(@RequestParam MultipartFile image, @RequestParam("groupId") int groupId)
+            throws IOException {
+        groupService.uploadImage(groupId, image);
+        return new ResponseEntity<>("Image uploaded", HttpStatus.OK);
     }
 
 }

@@ -18,9 +18,9 @@ public class ShowChatDto {
 
     private MessageDto lastMessage;
 
-    public ShowChatDto(Integer id, String name, String imageUrl, Long numberOfUreadMessages, MessageDto lastMessage) {
+    public ShowChatDto(Integer id, String name, Long numberOfUreadMessages, MessageDto lastMessage) {
         this.id = id;
-        this.imageUrl = imageUrl;
+
         this.name = name;
         this.numberOfUreadMessages = numberOfUreadMessages;
         this.lastMessage = lastMessage;

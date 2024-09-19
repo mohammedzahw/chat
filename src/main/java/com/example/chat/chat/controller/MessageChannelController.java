@@ -29,7 +29,6 @@ public class MessageChannelController {
 
     private final MessageChannelService messageChannelService;
 
-
     /*************************************************************************************************/
 
     @PostMapping("/send-message")
@@ -49,8 +48,7 @@ public class MessageChannelController {
 
     /*********************************************************************************************** */
     @PostMapping("/unreact-message")
-    public ResponseEntity<?> reactMessage(@RequestParam("messageId") Integer messageId
-            )
+    public ResponseEntity<?> reactMessage(@RequestParam("messageId") Integer messageId)
             throws IOException, TimeoutException {
         messageChannelService.unReactMessage(messageId);
         return ResponseEntity.ok("Message Un reacted");
@@ -70,6 +68,5 @@ public class MessageChannelController {
         messageChannelService.deleteMessage(messageId);
         return ResponseEntity.ok("Message deleted");
     }
-    
-   
+
 }

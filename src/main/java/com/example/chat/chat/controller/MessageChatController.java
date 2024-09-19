@@ -22,7 +22,7 @@ import com.example.chat.mapper.MessageChatMapper;
 @RestController
 @RequestMapping("/message-chat")
 public class MessageChatController {
-private  MessageChatMapper messageChatMapper;
+    private MessageChatMapper messageChatMapper;
     private final MessageChatService messageChatService;
 
     public MessageChatController(MessageChatService messageChatService) {
@@ -45,14 +45,15 @@ private  MessageChatMapper messageChatMapper;
         messageChatService.reactMessage(messageId, reaction);
         return ResponseEntity.ok("Message reacted");
     }
+
     /*********************************************************************************************** */
     @PostMapping("/unreact-message")
-    public ResponseEntity<?> reactMessage(@RequestParam("messageId") Integer messageId
-            )
+    public ResponseEntity<?> reactMessage(@RequestParam("messageId") Integer messageId)
             throws IOException, TimeoutException {
         messageChatService.unReactMessage(messageId);
         return ResponseEntity.ok("Message Un reacted");
     }
+
     /*********************************************************************************************** */
     @GetMapping("/get-messages/{chatId}/{page}")
     public ResponseEntity<?> getChannelMessages(@PathVariable("chatId") Integer chatId,
@@ -60,7 +61,8 @@ private  MessageChatMapper messageChatMapper;
         return ResponseEntity.ok(messageChatMapper.toDtoList(
                 messageChatService.getMessagesByChatId(chatId, page)));
     }
-  /*********************************************************************************************** */
+
+    /*********************************************************************************************** */
     @DeleteMapping("/delete-message/{messageId}")
     public ResponseEntity<?> deleteMessage(@PathVariable("messageId") Integer messageId) {
         messageChatService.deleteMessage(messageId);

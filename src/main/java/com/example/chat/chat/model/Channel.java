@@ -23,6 +23,7 @@ import lombok.Data;
 @Entity
 @Data
 public class Channel {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
@@ -31,7 +32,9 @@ public class Channel {
     private String name;
     private String description;
     private LocalDateTime lastUpdated;
-    private String imageUrl;
+    @OneToOne(mappedBy = "channel",fetch = FetchType.EAGER)
+    @JsonIgnore
+    private ImageChannel imageChannel;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = {
             CascadeType.PERSIST,
@@ -49,12 +52,12 @@ public class Channel {
     @JsonIgnore
     private List<LocalUser> followers;
 
-    @OneToOne(fetch = FetchType.EAGER,cascade = {
-        CascadeType.PERSIST,
-        CascadeType.MERGE,
-        CascadeType.DETACH,
-        CascadeType.REFRESH
-})
+    @OneToOne(fetch = FetchType.EAGER, cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE,
+                    CascadeType.DETACH,
+                    CascadeType.REFRESH
+    })
     @JsonIgnore
     private Queue queue;
 

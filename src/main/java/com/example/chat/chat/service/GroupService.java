@@ -1,15 +1,20 @@
 package com.example.chat.chat.service;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.chat.chat.dto.CreateGroupRequestDto;
 import com.example.chat.chat.dto.GroupDto;
@@ -17,11 +22,13 @@ import com.example.chat.chat.dto.MessageDto;
 import com.example.chat.chat.dto.ShowChatDto;
 import com.example.chat.chat.dto.UpdateGroupRequest;
 import com.example.chat.chat.model.Group;
+import com.example.chat.chat.model.ImageGroup;
 import com.example.chat.chat.model.MessageGroup;
 import com.example.chat.chat.model.MessageGroupReceivedTime;
 import com.example.chat.chat.model.MessageGroupStatus;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.chat.repository.GroupRepository;
+import com.example.chat.chat.repository.ImageGroupRepository;
 import com.example.chat.exception.CustomException;
 import com.example.chat.mapper.GroupMapper;
 import com.example.chat.mapper.MessageGroupMapper;
@@ -40,20 +47,26 @@ public class GroupService {
 
     private final GroupMapper groupMapper;
     private final MessageGroupMapper messageGroupMapper;
+    private final ImageGroupRepository imageGroupRepository;
 
     private final QueueService queueService;
 
     private final LocalUserService localUserService;
 
     private final GroupRepository groupRepository;
+    private final CloudinaryService cloudinaryService;
 
     private final MessageGroupService messageGroupService;
 
     public GroupService(GroupMapper groupMapper, MessageGroupMapper messageGroupMapper, QueueService queueService,
             LocalUserService localUserService, GroupRepository groupRepository,
+            CloudinaryService cloudinaryService,
+            ImageGroupRepository imageGroupRepository,
             @Lazy MessageGroupService messageGroupService) {
         this.groupMapper = groupMapper;
+        this.cloudinaryService = cloudinaryService;
         this.messageGroupMapper = messageGroupMapper;
+        this.imageGroupRepository = imageGroupRepository;
         this.queueService = queueService;
         this.localUserService = localUserService;
         this.groupRepository = groupRepository;
@@ -166,6 +179,40 @@ public class GroupService {
     }
 
     /****************************************************************************************** */
+    public void uploadImage(Integer groupId, MultipartFile image) throws IOException {
+        LocalUser user = localUserService.getLocalUserByToken();
+
+        BufferedImage bi = ImageIO.read(image.getInputStream());
+        if (bi == null) {
+            throw new CustomException("Invalid image file", HttpStatus.BAD_REQUEST);
+        }
+        Group group = getGroupById(groupId);
+
+        if (!user.getId().equals(group.getOwner().getId())) {
+            throw new CustomException("You can't upload image to this group", HttpStatus.BAD_REQUEST);
+        }
+        if (group.getImageGroup() != null) {
+            cloudinaryService.delete(group.getImageGroup().getImageId());
+        }
+        Map result = cloudinaryService.upload(image);
+        ImageGroup imageGroup = new ImageGroup();
+        imageGroup.setImageId((String) result.get("public_id"));
+        imageGroup.setImageUrl((String) result.get("url"));
+
+        imageGroup.setGroup(group);
+
+        saveImage(imageGroup);
+
+    }
+
+    /****************************************************************************************** */
+
+    public ImageGroup saveImage(ImageGroup imageGroup) {
+
+        return imageGroupRepository.save(imageGroup);
+    }
+
+    /****************************************************************************************** */
 
     public List<ShowChatDto> getUserGroups() {
 
@@ -187,7 +234,11 @@ public class GroupService {
                 messageDto = messageGroupMapper.toDto(messageGroup);
             }
             Long unreadMessages = messageGroupService.getNumberOfUreadMessageByGroupId(g.getId());
-            ShowChatDto chatDto = new ShowChatDto(g.getId(), g.getName(), g.getImageUrl(), unreadMessages, messageDto);
+            ShowChatDto chatDto = new ShowChatDto(g.getId(), g.getName(), 
+                    unreadMessages, messageDto);
+            if(g.getImageGroup() != null) {
+                chatDto.setImageUrl(g.getImageGroup().getImageUrl());
+            }
             chatDtos.add(chatDto);
         }
         return chatDtos;
@@ -244,7 +295,8 @@ public class GroupService {
 
     /**
      * @throws TimeoutException
-     * @throws IOException      ****************************************************************************************
+     * @throws IOException
+     *                          ****************************************************************************************
      */
     @Transactional
     public void deleteGroup(Integer groupId) throws IOException, TimeoutException {

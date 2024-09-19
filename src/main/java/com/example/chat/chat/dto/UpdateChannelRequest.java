@@ -8,5 +8,6 @@ public class UpdateChannelRequest {
     private Integer id;
     private String name;
     private String description;
-    
+
+	
 }

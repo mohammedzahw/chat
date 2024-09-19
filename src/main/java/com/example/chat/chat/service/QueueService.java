@@ -89,9 +89,8 @@ public class QueueService {
 
         queueRepository.deleteFromListenersById(Id);
         queueRepository.deleteById(Id);
-
+        
     }
-
     /********************************************************************************************************** */
     public Queue getQueue(String name) {
         return queueRepository.findByName(name).orElse(null);
