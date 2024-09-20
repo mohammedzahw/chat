@@ -88,10 +88,11 @@ public class ChannelController {
         return ResponseEntity.ok(channelMapper.toShowDtoList(channelService.getMyChannels()));
     }
 
-    /********************************************************************************************** */
+    /**
+     * @throws Exception ******************************************************************************************** */
     @DeleteMapping("/delete-channel/{channelId}")
     public ResponseEntity<?> deleteChannel(@PathVariable("channelId") Integer channelId)
-            throws IOException, TimeoutException {
+            throws Exception {
         channelService.deleteChannel(channelId);
         return ResponseEntity.ok("Channel deleted");
     }

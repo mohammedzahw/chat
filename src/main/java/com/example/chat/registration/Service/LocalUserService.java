@@ -110,7 +110,7 @@ public class LocalUserService {
         if (user.getImageUser() != null) {
             cloudinaryService.delete(user.getImageUser().getImageId());
         }
-        Map result = cloudinaryService.upload(image);
+        Map result = cloudinaryService.upload(image,user.getName() + user.getId());
         ImageUser imageUser = new ImageUser();
 
         imageUser.setImageId((String) result.get("public_id"));

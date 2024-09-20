@@ -3,6 +3,7 @@ package com.example.chat.chat.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.context.annotation.Lazy;
@@ -10,7 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.example.chat.chat.dto.SendMessageDto;
-import com.example.chat.chat.dto.UpdateMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.Group;
 import com.example.chat.chat.model.MessageGroup;
 import com.example.chat.chat.model.MessageGroupReaction;
@@ -18,6 +19,7 @@ import com.example.chat.chat.model.MessageGroupReceivedTime;
 import com.example.chat.chat.model.MessageGroupStatus;
 import com.example.chat.chat.model.MessageReaction;
 import com.example.chat.chat.model.MessageStatus;
+import com.example.chat.chat.model.MessageType;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.chat.repository.MessageGroupReactionRepository;
 import com.example.chat.chat.repository.MessageGroupReceivedTimeRepository;
@@ -41,50 +43,11 @@ public class MessageGroupService {
         @Lazy
         private final GroupService groupService;
         private final LocalUserService localUserService;
+        private final CloudinaryService cloudinaryService;
         private final MessageGroupRepository messageGroupRepository;
 
         /***************************************************************************************************** */
 
-        @Transactional
-        public void sendMessage(SendMessageDto sendMessageDto) throws IOException, TimeoutException {
-                Group group = groupService.getGroupById(sendMessageDto.getId());
-                LocalUser user = localUserService.getLocalUserByToken();
-                Queue queue = group.getQueue();
-                MessageGroup parent = null;
-                if (sendMessageDto.getParentMessageId() != null)
-                        parent = getMessageById(sendMessageDto.getParentMessageId());
-
-                MessageGroup messageGroup = new MessageGroup();
-                messageGroup.setContent(sendMessageDto.getContent());
-                messageGroup.setParentMessage(parent);
-                messageGroup.setType(sendMessageDto.getType());
-                messageGroup.setSendDateTime(LocalDateTime.now());
-                messageGroup.setGroup(group);
-                messageGroup.setSender(user);
-                messageGroupRepository.save(messageGroup);
-                List<LocalUser> members = groupService.getGroupMembers(sendMessageDto.getId());
-
-                for (LocalUser member : members) {
-                        if (!member.getId().equals(user.getId())) {
-                                MessageGroupStatus messageGroupStatus = new MessageGroupStatus();
-                                messageGroupStatus.setMessageGroup(messageGroup);
-                                messageGroupStatus.setStatus(MessageStatus.SENT);
-                                messageGroupStatus.setReceiver(member);
-                                saveMessageGroupStatus(messageGroupStatus);
-                        }
-                }
-
-                group.setLastUpdated(LocalDateTime.now());
-                groupService.saveGroup(group);
-
-                // MessageDto messageDto = MessageGroupMapper.INSTANCE.toDto(messageGroup);
-
-                // messageDto.setId("group," + messageGroup.getId());
-
-                queueService.sendMessage(queue,
-                                messageGroupMapper.toDto(messageGroup), "Group");
-
-        }
 
         public MessageGroup getMessageById(Integer id) {
                 return messageGroupRepository.findById(id).orElse(null);
@@ -209,20 +172,122 @@ public class MessageGroupService {
                 }
         }
 
-        /**************************************************************************************** */
-        public void deleteMessage(Integer messageId) {
+        /**
+         * @throws IOException
+         *                     **************************************************************************************
+         */
+        @Transactional
+        public void deleteMessage(Integer messageId) throws IOException {
+
+                MessageGroup messageGroup = getMessageById(messageId);
+
+                if (messageGroup == null)
+                        return;
+
+                if (messageGroup.getType() != MessageType.TEXT) {
+                        cloudinaryService.delete(messageGroup.getUrlId());
+
+                }
 
                 messageGroupRepository.deleteById(messageId);
         }
 
-        /**************************************************************************************** */
+        /**
+         * @throws IOException
+         *                          *
+         * @throws TimeoutException
+         *                          *************************************************************************************
+         */
 
-        public void updateMessage(UpdateMessageDto updateMessage) {
+        @Transactional
+        public void sendMediaMessage(SendMessageDto sendMessageDto) throws IOException, TimeoutException {
+                Group group = groupService.getGroupById(sendMessageDto.getId());
+                LocalUser user = localUserService.getLocalUserByToken();
+                Queue queue = group.getQueue();
+                MessageGroup parent = null;
+                if (sendMessageDto.getParentMessageId() != null)
+                        parent = getMessageById(sendMessageDto.getParentMessageId());
 
-                MessageGroup messageGroup = getMessageById(updateMessage.getMessageId());
-                messageGroup.setContent(updateMessage.getContent());
-                messageGroup.setType(updateMessage.getType());
+                Map result = cloudinaryService.upload(sendMessageDto.getFile(), group.getName() + group.getId());
+
+                String url = (String) result.get("url");
+                String publicId = (String) result.get("public_id");
+                // for (Object o : result.keySet()) {
+                //         System.out.println(o + " : " + result.get(o));
+
+                // }
+                Double duration = 0.0;
+                
+                if (sendMessageDto.getType().equals(MessageType.VIDEO)
+                                || sendMessageDto.getType().equals(MessageType.AUDIO)) {
+                                   
+                        duration = Double.parseDouble(result.get("duration").toString());
+                }
+                Double size = Double.parseDouble(result.get("bytes").toString());
+
+                MessageGroup messageGroup = new MessageGroup(
+                                url, publicId, size, duration,
+                                sendMessageDto.getType(), LocalDateTime.now(),
+                                user, group, parent);
 
                 messageGroupRepository.save(messageGroup);
+                List<LocalUser> members = groupService.getGroupMembers(sendMessageDto.getId());
+
+                for (LocalUser member : members) {
+                        if (!member.getId().equals(user.getId())) {
+                                MessageGroupStatus messageGroupStatus = new MessageGroupStatus();
+                                messageGroupStatus.setMessageGroup(messageGroup);
+                                messageGroupStatus.setStatus(MessageStatus.SENT);
+                                messageGroupStatus.setReceiver(member);
+                                saveMessageGroupStatus(messageGroupStatus);
+                        }
+                }
+
+                group.setLastUpdated(LocalDateTime.now());
+                groupService.saveGroup(group);
+
+                queueService.sendMessage(queue, messageGroupMapper.toDto(messageGroup), "Group");
         }
+
+        /**
+         * @throws TimeoutException
+         * @throws IOException
+         *                          **************************************************************************************
+         */
+
+        public void sendTextMessage(SendTextMessageDto sendMessageDto) throws IOException, TimeoutException {
+                Group group = groupService.getGroupById(sendMessageDto.getId());
+                LocalUser user = localUserService.getLocalUserByToken();
+                Queue queue = group.getQueue();
+                MessageGroup parent = null;
+                if (sendMessageDto.getParentMessageId() != null)
+                        parent = getMessageById(sendMessageDto.getParentMessageId());
+
+                MessageGroup messageGroup = new MessageGroup(
+                                sendMessageDto.getText(), null, 0.0, 0.0,
+                                MessageType.TEXT, LocalDateTime.now(),
+                                user, group, parent);
+
+                messageGroupRepository.save(messageGroup);
+                List<LocalUser> members = groupService.getGroupMembers(sendMessageDto.getId());
+
+                for (LocalUser member : members) {
+                        if (!member.getId().equals(user.getId())) {
+                                MessageGroupStatus messageGroupStatus = new MessageGroupStatus();
+                                messageGroupStatus.setMessageGroup(messageGroup);
+                                messageGroupStatus.setStatus(MessageStatus.SENT);
+                                messageGroupStatus.setReceiver(member);
+                                saveMessageGroupStatus(messageGroupStatus);
+                        }
+                }
+
+                group.setLastUpdated(LocalDateTime.now());
+                groupService.saveGroup(group);
+
+                queueService.sendMessage(queue,
+                                messageGroupMapper.toDto(messageGroup), "Group");
+        }
+
+        /**************************************************************************************** */
+
 }

@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,15 +20,22 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
 public class MessageChannel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
+
+    private String urlId;
     private String content;
-    private String type;
+    private Double size;
+    private Double duration;
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
     private LocalDateTime sendDateTime;
     @ManyToOne(fetch = FetchType.EAGER, cascade = {
             CascadeType.PERSIST,

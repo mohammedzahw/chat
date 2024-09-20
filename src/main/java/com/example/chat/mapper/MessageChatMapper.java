@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 import com.example.chat.chat.dto.MessageDto;
 import com.example.chat.chat.dto.MessageReactionDto;
 import com.example.chat.chat.dto.SendMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.Chat;
 import com.example.chat.chat.model.MessageChat;
 import com.example.chat.chat.model.MessageStatus;
+import com.example.chat.chat.model.MessageType;
 import com.example.chat.chat.service.MessageChatService;
 import com.example.chat.registration.model.LocalUser;
 
@@ -60,7 +62,7 @@ public class MessageChatMapper {
     }
 
     /********************************************************************************************* */
-    public MessageChat toEntity(SendMessageDto sendMessageDto, Chat chat, LocalUser sender) {
+    public MessageChat toEntity(SendTextMessageDto sendMessageDto, Chat chat, LocalUser sender) {
         if (sendMessageDto == null) {
             return null;
         }
@@ -71,8 +73,10 @@ public class MessageChatMapper {
         MessageChat messageChat = new MessageChat();
         messageChat.setChat(chat);
         messageChat.setParentMessage(parent);
-        messageChat.setContent(sendMessageDto.getContent());
-        messageChat.setType(sendMessageDto.getType());
+        messageChat.setContent(sendMessageDto.getText());
+        messageChat.setDuration(0.0);
+        messageChat.setSize(0.0);
+        messageChat.setType(MessageType.TEXT);
         messageChat.setSendDateTime(LocalDateTime.now());
         messageChat.setSender(sender);
         messageChat.setStatus(MessageStatus.SENT);
@@ -93,6 +97,31 @@ public class MessageChatMapper {
         }
 
         return list;
+    }
+
+    public MessageChat toMediaEntity(SendMessageDto sendMessageDto, Chat chat, String url, String publicId,
+    Double duration, Double size, LocalUser sender) {
+                if (sendMessageDto == null) {
+                    return null;
+                }
+                MessageChat parent = null;
+                if (sendMessageDto.getParentMessageId() != null)
+                    parent = messageChatService.getMessageById(sendMessageDto.getParentMessageId());
+        
+                MessageChat messageChat = new MessageChat();
+                messageChat.setChat(chat);
+                messageChat.setParentMessage(parent);
+                messageChat.setContent(url);
+                messageChat.setType(sendMessageDto.getType());
+                messageChat.setDuration(duration);
+                messageChat.setSize(size);
+                messageChat.setUrlId(publicId);
+        
+                messageChat.setSendDateTime(LocalDateTime.now());
+                messageChat.setSender(sender);
+                messageChat.setStatus(MessageStatus.SENT);
+        
+                return messageChat;
     }
 
     /********************************************************************************************* */

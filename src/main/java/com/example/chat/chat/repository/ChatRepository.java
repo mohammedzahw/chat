@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.example.chat.chat.model.Chat;
 import com.example.chat.chat.model.Queue;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 @SuppressWarnings("null")
@@ -25,5 +28,10 @@ public interface ChatRepository extends JpaRepository<Chat, Integer> {
 
     @Query("SELECT c.queue FROM Chat c WHERE c.id = :id")
     Optional<Queue> getQueueByChatId(Integer id);
+
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM message_chat WHERE chat_id = :chatId", nativeQuery = true)
+    void deleteChatMessages(Integer chatId);
 
 }

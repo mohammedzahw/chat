@@ -49,5 +49,10 @@ public interface ChannelRepository extends JpaRepository<Channel, Integer> {
 @Modifying
 @Query(value = "DELETE FROM channel_follower  WHERE channel_id = :channelId", nativeQuery = true)
 void deleteChannelFromFollowers(Integer channelId);
+
+@Transactional
+@Modifying
+@Query(value = "DELETE FROM message_channel WHERE channel_id = :channelId", nativeQuery = true)
+void deleteChannelMessages(Integer channelId);
     
 }

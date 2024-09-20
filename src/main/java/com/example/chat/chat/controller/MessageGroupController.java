@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.chat.chat.dto.SendMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.MessageReaction;
 import com.example.chat.chat.service.MessageGroupService;
 import com.example.chat.mapper.MessageGroupMapper;
@@ -31,11 +33,21 @@ public class MessageGroupController {
     private final MessageGroupService messageGroupService;
 
     /********************************************************************************************** */
-    @PostMapping("/send-message")
-    public ResponseEntity<?> sendMessage(@RequestBody SendMessageDto sendMessageDto)
+     @PostMapping("/send-message/media")
+    public ResponseEntity<?> sendMediaMessage( 
+             SendMessageDto message)
             throws IOException, TimeoutException {
-        messageGroupService.sendMessage(sendMessageDto);
-        return new ResponseEntity<>("Message sent", HttpStatus.OK);
+        messageGroupService.sendMediaMessage( message);
+        return ResponseEntity.ok("Message sent");
+    }
+
+
+
+    @PostMapping("/send-message/text")
+    public ResponseEntity<?> sendTextMessage(@RequestBody SendTextMessageDto message)
+            throws IOException, TimeoutException {
+        messageGroupService.sendTextMessage( message);
+        return ResponseEntity.ok("Message sent");
     }
 
     /********************************************************************************************** */
@@ -65,9 +77,10 @@ public class MessageGroupController {
                 messageGroupService.getMessagesByGroupId(groupId, page)));
     }
 
-    /***************************************************************************************** */
+    /**
+     * @throws IOException *************************************************************************************** */
     @DeleteMapping("/delete-message/{messageId}")
-    public ResponseEntity<?> deleteMessage(@PathVariable("messageId") Integer messageId) {
+    public ResponseEntity<?> deleteMessage(@PathVariable("messageId") Integer messageId) throws IOException {
         messageGroupService.deleteMessage(messageId);
         return ResponseEntity.ok("Message deleted");
     }

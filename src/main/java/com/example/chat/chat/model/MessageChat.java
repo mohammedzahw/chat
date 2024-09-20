@@ -19,6 +19,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -26,12 +27,18 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class MessageChat {
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO)
         private Integer id;
         private String content;
-        private String type;
+        
+    private String urlId;
+        private Double size;
+        private Double duration;
+        @Enumerated(EnumType.STRING)
+        private MessageType type;
         private LocalDateTime sendDateTime;
         private LocalDateTime receiveDateTime;
         @Enumerated(EnumType.STRING)

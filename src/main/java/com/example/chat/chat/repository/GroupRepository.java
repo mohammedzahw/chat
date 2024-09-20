@@ -53,4 +53,9 @@ public interface GroupRepository extends JpaRepository<Group, Integer> {
     @Query(value = "DELETE FROM group_admin WHERE group_id = :groupId", nativeQuery = true)
     void deleteGroupFromAdmins(Integer groupId);
 
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM message_group WHERE group_id = :groupId", nativeQuery = true)
+    void deleteGroupMessages(Integer groupId);
+
 }

@@ -10,8 +10,10 @@ import org.springframework.stereotype.Component;
 import com.example.chat.chat.dto.MessageDto;
 import com.example.chat.chat.dto.MessageReactionDto;
 import com.example.chat.chat.dto.SendMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.Channel;
 import com.example.chat.chat.model.MessageChannel;
+import com.example.chat.chat.model.MessageType;
 import com.example.chat.chat.service.MessageChannelService;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -51,7 +53,7 @@ public class MessageChannelMapper {
     }
 
     /********************************************************************************************* */
-    public MessageChannel toEntity(SendMessageDto sendMessageDto, Channel channel) {
+    public MessageChannel toEntity(SendTextMessageDto sendMessageDto, Channel channel) {
         if (sendMessageDto == null) {
             return null;
         }
@@ -62,8 +64,31 @@ public class MessageChannelMapper {
         MessageChannel messageChannel = new MessageChannel();
         messageChannel.setChannel(channel);
         messageChannel.setParentMessage(parent);
-        messageChannel.setContent(sendMessageDto.getContent());
-        messageChannel.setType(sendMessageDto.getType());
+        messageChannel.setContent(sendMessageDto.getText());
+        messageChannel.setDuration(0.0);
+        messageChannel.setSize(0.0);
+        messageChannel.setType(MessageType.TEXT);
+        messageChannel.setSendDateTime(LocalDateTime.now());
+
+        return messageChannel;
+
+    }
+    public MessageChannel toMediaEntity(SendMessageDto sendMessageDto, Channel channel, String url, String publicId, Double duration, Double size) {
+        if (sendMessageDto == null) {
+            return null;
+        }
+        MessageChannel parent = null;
+        if (sendMessageDto.getParentMessageId() != null)
+            parent = messageChannelService.getMessageById(sendMessageDto.getParentMessageId());
+
+        MessageChannel messageChannel = new MessageChannel();
+        messageChannel.setChannel(channel);
+        messageChannel.setParentMessage(parent);
+        messageChannel.setContent(url);
+        messageChannel.setDuration(duration);
+        messageChannel.setSize(size);
+        messageChannel.setUrlId(publicId);
+        messageChannel.setType( sendMessageDto.getType());
         messageChannel.setSendDateTime(LocalDateTime.now());
 
         return messageChannel;

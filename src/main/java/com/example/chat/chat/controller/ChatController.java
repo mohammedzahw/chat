@@ -48,9 +48,10 @@ public class ChatController {
         return new ResponseEntity<>(chatService.getUserChats(), HttpStatus.OK);
     }
 
-    /********************************************************************************************** */
+    /**
+     * @throws Exception ******************************************************************************************** */
     @DeleteMapping("/delete-chat/{chatId}")
-    public ResponseEntity<?> deleteChat(@PathVariable("chatId") Integer chatId) throws IOException, TimeoutException {
+    public ResponseEntity<?> deleteChat(@PathVariable("chatId") Integer chatId) throws Exception {
         chatService.deleteChat(chatId);
         return new ResponseEntity<>("Chat deleted", HttpStatus.OK);
     }

@@ -42,7 +42,7 @@ public class Group {
     private LocalDateTime lastUpdated;
     private LocalDateTime createdDate;
 
-    @OneToOne(mappedBy = "group", fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "group", fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     @ToStringExclude
     @JsonIgnore
     private ImageGroup imageGroup;

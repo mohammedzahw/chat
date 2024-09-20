@@ -75,10 +75,11 @@ public class GroupController {
         return ResponseEntity.ok(groupService.getOwnedGroups());
     }
 
-    /********************************************************************************************** */
+    /**
+     * @throws Exception ******************************************************************************************** */
     @DeleteMapping("/delete-group/{groupId}")
     public ResponseEntity<?> deleteGroup(@PathVariable("groupId") Integer groupId)
-            throws IOException, TimeoutException {
+            throws Exception {
         groupService.deleteGroup(groupId);
         return new ResponseEntity<>("Group deleted", HttpStatus.OK);
     }

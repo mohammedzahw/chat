@@ -3,18 +3,22 @@ package com.example.chat.chat.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.chat.chat.dto.SendMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.Chat;
 import com.example.chat.chat.model.MessageChat;
 import com.example.chat.chat.model.MessageChatReaction;
 import com.example.chat.chat.model.MessageReaction;
+import com.example.chat.chat.model.MessageType;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.chat.repository.MessageChatReactionRepository;
 import com.example.chat.chat.repository.MessageChatRepository;
@@ -23,6 +27,7 @@ import com.example.chat.mapper.MessageChatMapper;
 import com.example.chat.registration.Service.LocalUserService;
 import com.example.chat.registration.model.LocalUser;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,6 +38,7 @@ public class MessageChatService {
         private final QueueService queueService;
 
         private final LocalUserService localUserService;
+        private final CloudinaryService cloudinaryService;
 
         @Lazy
         private final ChatService chatService;
@@ -40,38 +46,7 @@ public class MessageChatService {
 
         private final MessageChatRepository messageChatRepository;
 
-        // public MessageChatService(@Lazy MessageChatMapper messageChatMapper,
-        // QueueService queueService,
-        // LocalUserService localUserService, @Lazy ChatService chatService,
-        // MessageChatReactionRepository messageChatReactionRepository,
-        // MessageChatRepository messageChatRepository) {
-        // this.messageChatMapper = messageChatMapper;
-        // this.queueService = queueService;
-        // this.localUserService = localUserService;
-        // this.chatService = chatService;
-        // this.messageChatReactionRepository = messageChatReactionRepository;
-        // this.messageChatRepository = messageChatRepository;
-        // }
-
-        /******************************************************************************* */
-        public void sendMessage(SendMessageDto sendMessageDto) throws IOException, TimeoutException {
-                Chat chat = chatService.getChat(sendMessageDto.getId());
-                LocalUser sender = localUserService.getLocalUserByToken();
-                if (chat.getUser1().getId() != sender.getId() && chat.getUser2().getId() != sender.getId()) {
-                        throw new CustomException("You can't send this message", HttpStatus.BAD_REQUEST);
-                }
-
-                Queue queue = chat.getQueue();
-
-                MessageChat messageChat = messageChatMapper.toEntity(sendMessageDto, chat, sender);
-                messageChatRepository.save(messageChat);
-                chat.setLastUpdated(LocalDateTime.now());
-                chatService.saveChat(chat);
-
-                queueService.sendMessage(queue,
-                                messageChatMapper.toDto(messageChat), "Chat");
-
-        }
+       
 
         /******************************************************************************* */
 
@@ -123,9 +98,8 @@ public class MessageChatService {
 
         }
 
-        /******************************************************************************* */
+        /**************************************************************************************/
 
-        /******************************************************************************* */
 
         private MessageChatReaction getReactionByMessageIdAndUserId(Integer messageId, Integer id) {
 
@@ -142,9 +116,68 @@ public class MessageChatService {
                 }
         }
 
-        /******************************************************************************* */
-        public void deleteMessage(Integer messageId) {
+        /**
+         * @throws IOException ********************************************************************************/
 
+         @Transactional
+        public void deleteMessage(Integer messageId) throws IOException {
+
+        
+                MessageChat messageChat = getMessageById(messageId);
+                if(messageChat.getType()!=MessageType.TEXT){
+                        cloudinaryService.delete(messageChat.getUrlId());
+                }
+                
                 messageChatRepository.deleteById(messageId);
+        }
+        /***********************************************************************************/
+
+        @Transactional
+        public void sendMediaMessage( SendMessageDto sendMessageDto)
+                        throws IOException, TimeoutException {
+
+                Chat chat = chatService.getChat(sendMessageDto.getId());
+                Queue queue = chat.getQueue();
+                LocalUser user = localUserService.getLocalUserByToken();
+
+                Map result = cloudinaryService.upload(sendMessageDto.getFile(),  chat.getId().toString());
+
+                String url = (String) result.get("url");
+                String publicId = (String) result.get("public_id");
+                Double duration = 0.0;
+                if (sendMessageDto.getType().equals(MessageType.VIDEO)
+                                || sendMessageDto.getType().equals(MessageType.AUDIO))
+                        duration = Double.parseDouble(result.get("duration").toString());
+                Double size = Double.parseDouble(result.get("bytes").toString());
+
+                MessageChat messageChat = messageChatMapper.toMediaEntity(sendMessageDto, chat,
+                                url, publicId, duration, size, user);
+                messageChatRepository.save(messageChat);
+                chat.setLastUpdated(LocalDateTime.now());
+                chatService.saveChat(chat);
+
+                queueService.sendMessage(queue,
+                                messageChatMapper.toDto(messageChat), "Chat");
+        }
+
+        /***************************************************************************************/
+        @Transactional
+        public void sendTextMessage(SendTextMessageDto sendMessageDto) throws IOException, TimeoutException {
+                Chat chat = chatService.getChat(sendMessageDto.getId());
+                LocalUser sender = localUserService.getLocalUserByToken();
+                if (chat.getUser1().getId() != sender.getId() && chat.getUser2().getId() != sender.getId()) {
+                        throw new CustomException("You can't send this message", HttpStatus.BAD_REQUEST);
+                }
+
+                Queue queue = chat.getQueue();
+
+                MessageChat messageChat = messageChatMapper.toEntity(sendMessageDto, chat, sender);
+                messageChatRepository.save(messageChat);
+                chat.setLastUpdated(LocalDateTime.now());
+                chatService.saveChat(chat);
+
+                queueService.sendMessage(queue,
+                                messageChatMapper.toDto(messageChat), "Chat");
+
         }
 }

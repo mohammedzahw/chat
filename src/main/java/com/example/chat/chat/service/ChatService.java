@@ -32,7 +32,7 @@ public class ChatService {
     private final MessageChatMapper messageChatMapper;
     private final LocalUserMapper localUserMapper;
     private final QueueService queueService;
-
+    private final CloudinaryService cloudinaryService;
     private final ChatRepository chatRepository;
 
     private final LocalUserService localUserService;
@@ -40,7 +40,9 @@ public class ChatService {
 
     public ChatService(ChatMapper chatMapper, MessageChatMapper messageChatMapper, LocalUserMapper localUserMapper,
             QueueService queueService, ChatRepository chatRepository, LocalUserService localUserService,
+            CloudinaryService cloudinaryService,
             @Lazy MessageChatService messageChatService) {
+        this.cloudinaryService = cloudinaryService;
         this.chatMapper = chatMapper;
         this.messageChatMapper = messageChatMapper;
         this.localUserMapper = localUserMapper;
@@ -165,9 +167,10 @@ public class ChatService {
         return localUserService.getQueuesByUserId();
     }
 
-    /*** ***************************************************************************************/
+    /**
+     * @throws Exception * ***************************************************************************************/
     @Transactional
-    public void deleteChat(Integer chatId) throws IOException, TimeoutException {
+    public void deleteChat(Integer chatId) throws Exception {
         LocalUser user = localUserService.getLocalUserByToken();
 
         Chat chat = chatRepository.findById(chatId).orElseThrow(
@@ -176,7 +179,9 @@ public class ChatService {
             throw new CustomException("You can't delete this chat", HttpStatus.BAD_REQUEST);
         }
         Queue queue = chat.getQueue();
+        chatRepository.deleteChatMessages(chatId);
         chatRepository.deleteById(chatId);
+        cloudinaryService.deleteByFolder(queue.getName() + chatId);
         queueService.deleteQueueFromRabbitMq(queue.getName());
         queueService.deleteQueue(queue.getId());
 

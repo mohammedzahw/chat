@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,15 +19,21 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
 public class MessageGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String content;
-    private String type;
+    private String urlId;
+    private Double size;
+    private Double duration;
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
     private LocalDateTime sendDateTime;
     @ManyToOne(fetch = FetchType.EAGER, cascade = {
             CascadeType.PERSIST,
@@ -77,5 +85,27 @@ public class MessageGroup {
 
     @ManyToMany(mappedBy = "messageGroup", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<MessageGroupReceivedTime> receivedTimes;
+
+    public MessageGroup(
+            String content,
+            String urlId,
+            Double size,
+            Double duration,
+            MessageType type,
+            LocalDateTime sendDateTime,
+            LocalUser sender,
+            Group group,
+            MessageGroup parentMessage
+    ) {
+        this.content = content;
+        this.urlId = urlId;
+        this.size = size;
+        this.duration = duration;
+        this.type = type;
+        this.sendDateTime = sendDateTime;
+        this.sender = sender;
+        this.group = group;
+        this.parentMessage = parentMessage;
+    }
 
 }

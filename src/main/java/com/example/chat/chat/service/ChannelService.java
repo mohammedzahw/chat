@@ -110,7 +110,7 @@ public class ChannelService {
         if (channel.getImageChannel() != null) {
             cloudinaryService.delete(channel.getImageChannel().getImageId());
         }
-        Map result = cloudinaryService.upload(image);
+        Map result = cloudinaryService.upload(image,channel.getName() + channelId);
         ImageChannel imageChannel = new ImageChannel();
 
         imageChannel.setImageId((String) result.get("public_id"));
@@ -227,8 +227,9 @@ public class ChannelService {
         return imageChannelRepository.save(imageChannel);
     }
 
-    /******************************************************************************************************* */
-    public void deleteChannel(Integer channelId) throws IOException, TimeoutException {
+    /**
+     * @throws Exception ***************************************************************************************************** */
+    public void deleteChannel(Integer channelId) throws Exception {
         LocalUser user = localUserService.getLocalUserByToken();
 
         Channel channel = channelRepository.findById(channelId).orElseThrow(
@@ -238,9 +239,11 @@ public class ChannelService {
         }
 
         channelRepository.deleteChannelFromFollowers(channelId);
+        channelRepository.deleteChannelMessages(channelId);
         Queue queue = channel.getQueue();
         channelRepository.deleteById(channelId);
         queueService.deleteQueueFromRabbitMq(queue.getName());
+        cloudinaryService.deleteByFolder(channel.getName() + channelId);
         queueService.deleteQueue(queue.getId());
     }
 

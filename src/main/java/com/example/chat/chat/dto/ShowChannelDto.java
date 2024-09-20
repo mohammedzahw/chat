@@ -2,6 +2,8 @@ package com.example.chat.chat.dto;
 
 import java.time.LocalDateTime;
 
+import com.example.chat.chat.model.MessageType;
+
 import lombok.Data;
 
 @Data
@@ -14,7 +16,7 @@ public class ShowChannelDto {
 
     private LocalDateTime lastMessageSendDate;
 
-    private String lastMessageType;
+    private MessageType lastMessageType;
     private String lastMessageContent;
 
 }

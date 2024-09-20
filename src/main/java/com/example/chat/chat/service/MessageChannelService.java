@@ -3,6 +3,7 @@ package com.example.chat.chat.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.context.annotation.Lazy;
@@ -12,10 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.chat.chat.dto.SendMessageDto;
+import com.example.chat.chat.dto.SendTextMessageDto;
 import com.example.chat.chat.model.Channel;
 import com.example.chat.chat.model.MessageChannel;
 import com.example.chat.chat.model.MessageChannelReaction;
 import com.example.chat.chat.model.MessageReaction;
+import com.example.chat.chat.model.MessageType;
 import com.example.chat.chat.model.Queue;
 import com.example.chat.chat.repository.MessageChannelReactionRepository;
 import com.example.chat.chat.repository.MessageChannelRepository;
@@ -37,12 +40,16 @@ public class MessageChannelService {
     private final MessageChannelReactionRepository messageChannelReactionRepository;
 
     private final LocalUserService localUserService;
+    private final CloudinaryService cloudinaryService;
 
     private final ChannelService channelService;
     public MessageChannelService( @Lazy MessageChannelMapper messageChannelMapper,
         QueueService queueService, MessageChannelRepository messageChannelRepository,
         MessageChannelReactionRepository messageChannelReactionRepository,
-        LocalUserService localUserService, ChannelService channelService) {
+            LocalUserService localUserService, ChannelService channelService,
+            CloudinaryService cloudinaryService) {
+
+        this.cloudinaryService = cloudinaryService;
 
         this.messageChannelMapper = messageChannelMapper;
         this.queueService = queueService;
@@ -53,8 +60,10 @@ public class MessageChannelService {
         }
 
     /************************************************************************************************ */
+
     @Transactional
-    public void sendMessage(SendMessageDto sendMessageDto) throws IOException, TimeoutException {
+    public void sendMediaMessage(SendMessageDto sendMessageDto)
+            throws IOException, TimeoutException {
 
         Channel channel = channelService.getChannel(sendMessageDto.getId());
         Queue queue = channel.getQueue();
@@ -62,7 +71,17 @@ public class MessageChannelService {
         if (!user.getId().equals(channel.getOwner().getId())) {
             throw new CustomException("You are not owner of this channel", HttpStatus.BAD_REQUEST);
         }
-        MessageChannel messageChannel = messageChannelMapper.toEntity(sendMessageDto,  channel);
+        Map result = cloudinaryService.upload(sendMessageDto.getFile(),channel.getName() + channel.getId());
+
+        String url = (String) result.get("url");
+        String publicId = (String) result.get("public_id");
+        Double duration = 0.0;
+        if (sendMessageDto.getType().equals(MessageType.VIDEO)
+                || sendMessageDto.getType().equals(MessageType.AUDIO))
+            duration = Double.parseDouble(result.get("duration").toString());
+        Double size = Double.parseDouble(result.get("bytes").toString());
+        MessageChannel messageChannel = messageChannelMapper.toMediaEntity(sendMessageDto, channel,
+                url, publicId, duration, size);
         messageChannelRepository.save(messageChannel);
         channel.setLastUpdated(LocalDateTime.now());
         channelService.saveChannel(channel);
@@ -70,6 +89,29 @@ public class MessageChannelService {
         queueService.sendMessage(queue,
                 messageChannelMapper.toDto(messageChannel), "Channel");
 
+    }
+
+    /**
+     * @throws TimeoutException
+     * @throws IOException
+     *********************************************************************************************/
+
+    public void sendTextMessage(SendTextMessageDto sendMessageDto) throws IOException, TimeoutException {
+
+        Channel channel = channelService.getChannel(sendMessageDto.getId());
+        Queue queue = channel.getQueue();
+        LocalUser user = localUserService.getLocalUserByToken();
+        if (!user.getId().equals(channel.getOwner().getId())) {
+            throw new CustomException("You are not owner of this channel", HttpStatus.BAD_REQUEST);
+        }
+
+        MessageChannel messageChannel = messageChannelMapper.toEntity(sendMessageDto, channel);
+        messageChannelRepository.save(messageChannel);
+        channel.setLastUpdated(LocalDateTime.now());
+        channelService.saveChannel(channel);
+
+        queueService.sendMessage(queue,
+                messageChannelMapper.toDto(messageChannel), "Channel");
     }
 
     /***********************************************************************************************/
@@ -127,8 +169,16 @@ public class MessageChannelService {
 
     }
 
-    /********************************************************************************************************************* */
-    public void deleteMessage(Integer messageId) {
+    /**
+     * @throws IOException ******************************************************************************************************************* */
+    @Transactional
+     public void deleteMessage(Integer messageId) throws IOException {
+
+        MessageChannel messageChannel = getMessageById(messageId);
+
+        if (messageChannel.getType() != MessageType.TEXT) {
+            cloudinaryService.delete(messageChannel.getUrlId());
+        }
 
         messageChannelRepository.deleteById(messageId);
     }

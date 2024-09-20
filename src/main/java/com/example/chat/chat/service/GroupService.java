@@ -194,7 +194,7 @@ public class GroupService {
         if (group.getImageGroup() != null) {
             cloudinaryService.delete(group.getImageGroup().getImageId());
         }
-        Map result = cloudinaryService.upload(image);
+        Map result = cloudinaryService.upload(image, group.getName() + groupId);   
         ImageGroup imageGroup = new ImageGroup();
         imageGroup.setImageId((String) result.get("public_id"));
         imageGroup.setImageUrl((String) result.get("url"));
@@ -294,12 +294,10 @@ public class GroupService {
     }
 
     /**
-     * @throws TimeoutException
-     * @throws IOException
-     *                          ****************************************************************************************
+     * @throws Exception ***************************************************************************************
      */
     @Transactional
-    public void deleteGroup(Integer groupId) throws IOException, TimeoutException {
+    public void deleteGroup(Integer groupId) throws Exception {
         LocalUser user = localUserService.getLocalUserByToken();
         LocalUser owner = getGroupOwner(groupId);
         if (!user.getId().equals(owner.getId())) {
@@ -307,11 +305,13 @@ public class GroupService {
         }
         groupRepository.deleteGroupFromMembers(groupId);
         groupRepository.deleteGroupFromAdmins(groupId);
+        groupRepository.deleteGroupMessages(groupId);
         Group group = getGroupById(groupId);
         Queue queue = group.getQueue();
         groupRepository.delete(group);
         queueService.deleteQueueFromRabbitMq(queue.getName());
         queueService.deleteQueue(queue.getId());
+        cloudinaryService.deleteByFolder(group.getName() + groupId);
 
         groupRepository.delete(group);
     }
