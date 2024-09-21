@@ -5,6 +5,11 @@ import java.sql.SQLException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import com.example.chat.exception.CustomException;
 import com.example.chat.registration.Service.LocalUserService;
@@ -110,4 +116,53 @@ public class LoginController {
 
         return new ResponseEntity<>("Password Changed Successfully", HttpStatus.OK);
     }
+
+    /**
+     * @throws IOException
+     ***************************************************************************************************************/
+    @GetMapping("/login/google")
+    public RedirectView loginWithGoogle(HttpServletRequest request) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl(baseUrl + "/oauth2/authorization/google");
+        return redirectView;
+
+    }
+
+    /*****************************************************************************************************************/
+    @GetMapping("/login/github")
+    public RedirectView loginWithGithub(HttpServletRequest request, HttpServletRequest response) {
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        RedirectView redirectView = new RedirectView();
+        redirectView.setUrl(baseUrl + "/oauth2/authorization/github");
+        return redirectView;
+
+    }
+
+    /*****************************************************************************************************************/
+
+    @GetMapping("/login/oauth2/success")
+    @SuppressWarnings("null")
+    public RedirectView loginOuth2(@AuthenticationPrincipal OAuth2User oAuth2User)
+            throws IOException, SQLException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+            String registrationId = oauthToken.getAuthorizedClientRegistrationId();
+            ResponseEntity<?> res = loginService.loginOuth2(oAuth2User.getAttributes(), registrationId);
+            if (res.getStatusCode() == HttpStatus.OK) {
+
+                String token = res.getBody().toString();
+                return new RedirectView("https://zakker.vercel.app/?token=" + token);
+            } else {
+                return new RedirectView("/login/error");
+            }
+        } else {
+            return new RedirectView("/login/error");
+        }
+    }
+
+    /************************************************************************************************************** */
+
 }

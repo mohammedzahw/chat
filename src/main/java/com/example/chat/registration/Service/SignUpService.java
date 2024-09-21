@@ -3,7 +3,7 @@ package com.example.chat.registration.Service;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-
+import java.time.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +13,7 @@ import com.example.chat.mapper.LocalUserMapper;
 import com.example.chat.registration.dto.SignUpRequestDto;
 import com.example.chat.registration.model.LocalUser;
 import com.example.chat.registration.model.Role;
+import com.example.chat.registration.oAuth2.OAuth2UserDetails;
 import com.example.chat.security.TokenUtil;
 
 import jakarta.mail.MessagingException;
@@ -110,36 +111,22 @@ public class SignUpService {
     }
 
     /**************************************************************************************************************/
-    // public User registerOuth2(OAuth2UserDetails oAuth2UserDetails) throws
-    // IOException, SerialException, SQLException {
-    // User user = new User();
+    /**************************************************************************************************************/
+    public LocalUser registerOuth2(OAuth2UserDetails oAuth2UserDetails)
+            throws IOException, SQLException {
+        LocalUser user = new LocalUser();
 
-    // user.setEmail(oAuth2UserDetails.getEmail());
-    // user.setFirstName(oAuth2UserDetails.getFirstName());
-    // user.setLastName(oAuth2UserDetails.getLastName());
-    // user.setEnabled(true);
-    // Role role = roleRepository.findByRole("ROLE_USER").orElse(null);
-    // user.setRoles(List.of(role));
-    // user.setLastLogin(LocalDateTime.now());
-    // user.setPassword(passwordEncoder.encode("password@M.reda.49"));
-    // user.setRegistrationDate(LocalDateTime.now());
-    // // user.setProfilePicture(downloadImage(oAuth2UserDetails.getPicture()));
+        user.setEmail(oAuth2UserDetails.getEmail());
+        user.setName(oAuth2UserDetails.getFirstName() + oAuth2UserDetails.getLastName());
 
-    // return user;
-    // }
+        Role role = roleService.getByRole("ROLE_USER");
+        user.setRoles(List.of(role));
+        user.setPassword(passwordEncoder.encode("password@M.reda.49"));
+  
+        // user.setProfilePicture(downloadImage(oAuth2UserDetails.getPicture()));
+
+        return user;
+    }
 
     /******************************************************************************************************************/
-    // public byte[] downloadImage(String imageUrl) throws IOException,
-    // SerialException, SQLException {
-    // RestTemplate restTemplate = new RestTemplate();
-
-    // // Make a request to the image URL
-    // ResponseEntity<byte[]> response = restTemplate.getForEntity(imageUrl,
-    // byte[].class);
-
-    // return response.getBody();
-
-    // }
 }
-
-/******************************************************************************************************************/

@@ -2,14 +2,19 @@ package com.example.chat.registration.Service;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.chat.exception.CustomException;
 import com.example.chat.registration.dto.LoginRequestDto;
 import com.example.chat.registration.model.LocalUser;
+import com.example.chat.registration.oAuth2.OAuth2UserDetails;
+import com.example.chat.registration.oAuth2.OAuth2UserGitHub;
+import com.example.chat.registration.oAuth2.OAuth2UserGoogle;
 import com.example.chat.security.TokenUtil;
 
 import jakarta.mail.MessagingException;
@@ -96,6 +101,41 @@ public class LoginService {
 
         }
     }
+    /********************************************************************************************************************/
+
+    public ResponseEntity<?> loginOuth2(Map<String, Object> principal, String registrationId)
+            throws IOException, SQLException {
+        OAuth2UserDetails oAuth2UserDetails;
+        try {
+
+            if (registrationId.equals("google")) {
+                oAuth2UserDetails = new OAuth2UserGoogle(principal);
+            } else if (registrationId.equals("github")) {
+
+                oAuth2UserDetails = new OAuth2UserGitHub(principal);
+            } else {
+                throw new CustomException("Provider not supported!", HttpStatus.BAD_REQUEST);
+            }
+            // System.out.println("user name : " + oAuth2UserDetails.getEmail());
+            LocalUser user = localUserService.getLocalUserByEmail(oAuth2UserDetails.getEmail());
+
+            if (user == null) {
+                user = signUpService.registerOuth2(oAuth2UserDetails);
+            }
+
+            localUserService.saveUser(user);
+            String token = tokenUtil.generateToken(user.getEmail(), user.getId(), 3000000);
+
+            return new ResponseEntity<>(token, HttpStatus.OK);
+        } catch (CustomException e) {
+            // System.out.println(e.getMessage());
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            // System.out.println(e.getMessage());
+           return  new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     /********************************************************************************************************************/
 
 }

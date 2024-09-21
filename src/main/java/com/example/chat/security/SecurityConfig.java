@@ -77,7 +77,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
                       "/api/v1/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                        "/api/**","/chat","/websocket/**","/**")
+                        "/api/**", "/websocket/**", "/oauth2/**")
                 .permitAll()
                 .anyRequest().hasAnyRole("USER", "ADMIN", "INSTRUCTOR"))
                 .addFilterAfter(authFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -87,7 +87,7 @@ public class SecurityConfig {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write("Access Denied");
                 }));
-
+        http.oauth2Login(login -> login.defaultSuccessUrl("/login/oauth2/success"));
         // http.oauth2Login(login -> login.defaultSuccessUrl("/login/oauth2/success"));
         // http.sessionManagement(session -> {
         // session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
