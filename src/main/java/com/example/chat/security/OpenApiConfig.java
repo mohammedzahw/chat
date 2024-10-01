@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
-@OpenAPIDefinition(info = @Info(title = "E-Learning Platform")
+@OpenAPIDefinition(info = @Info(title = "Chat App")
 
         , security = @SecurityRequirement(name = "bearerAuth")
 
